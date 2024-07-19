@@ -6,7 +6,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 const { User } = require('./models');
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 const SECRET_KEY = 'your_secret_key';
 
 app.use(bodyParser.json());
