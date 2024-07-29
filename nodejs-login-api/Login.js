@@ -16,26 +16,25 @@ app.use(cors()); // Add this line to enable CORS
 // Login endpoint
 app.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const user = await User.findOne({ where: { username } });
-
+    const { email, password } = req.body;
+    const user = await User.findOne({ where: { email } });
+    
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(400).json({ error: 'User not found' });
     }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid password' });
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid credentials' });
     }
-
-    const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '1h' });
-
-    res.status(200).json({ message: 'Login successful', token });
+    
+    const token = jwt.sign({ id: user.id }, 'your_jwt_secret', { expiresIn: '1h' });
+    res.json({ token, profileCreated: user.profileCreated });
   } catch (error) {
-    res.status(500).json({ error: 'An error occurred while logging in' });
+    res.status(500).json({ error: 'Error logging in' });
   }
 });
+
 
 // Sign-up endpoint
 app.post('/signup', async (req, res) => {
