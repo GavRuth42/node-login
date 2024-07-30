@@ -20,44 +20,36 @@ const sequelize = new Sequelize('my_database', 'please2', 'Jaxon4266$', {
 // Define User model
 const User = require('./models/User.js')(sequelize, DataTypes);
 
-app.use(
-  session({
-    secret: 'your_secret_key',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false },
-  })
-);
-
 // Login endpoint
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
     const user = await User.findOne({ where: { username } });
-
+  
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
+  
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
+  
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid password' });
     }
-
+  
     const token = jwt.sign({ id: user.id }, 'your_secret_key', {
       expiresIn: '1h',
     });
-
+  
     const profileCreated = user.profileCreated; // Assuming profileCreated is a field in the User model
-
+  
     res.json({ token, profileCreated });
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 // Sync database and start server
 sequelize.sync().then(() => {
