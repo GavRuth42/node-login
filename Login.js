@@ -61,7 +61,7 @@ app.post('/login', async (req, res) => {
 
 // Sync database and start server
 sequelize.sync().then(() => {
-  app.listen(3001, () => {
+  app.listen(3001, '0.0.0.0',() => {
     console.log('Server is running on port 3001');
   });
 });
