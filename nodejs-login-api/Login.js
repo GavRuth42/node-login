@@ -12,12 +12,25 @@ const SECRET_KEY = 'your_secret_key';
 
 app.use(bodyParser.json());
 app.use(cors()); // Add this line to enable CORS
+const sequelize = new Sequelize(config.database, config.username, config.password, {
+  host: config.host,
+  dialect: config.dialect
+});
+
+const User = require('./User.js')(sequelize, DataTypes);
+
+sequelize.sync();
+
+module.exports = {
+  sequelize,
+  User
+};
 
 // Login endpoint
 app.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
+    const { username, password } = req.body;
+    const user = await User.findOne({ where: { username } });
     
     if (!user) {
       return res.status(400).json({ error: 'User not found' });
