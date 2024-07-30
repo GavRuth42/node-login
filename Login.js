@@ -6,12 +6,12 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { Sequelize, DataTypes } = require('sequelize');
 const session = require('express-session');
-
+const cors = require('cors');
 // Initialize Express app
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
+app.use(cors()); // Add this line
 // Initialize Sequelize
 const sequelize = new Sequelize('my_database', 'please2', 'Jaxon4266$', {
   host: 'ec2-3-215-102-128.compute-1.amazonaws.com',
