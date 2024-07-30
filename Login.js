@@ -1,67 +1,67 @@
+// Login.js
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const { Sequelize, DataTypes } = require('sequelize');
-const { User } = require('./models');
-const cors = require('cors');
+const session = require('express-session');
 
+// Initialize Express app
 const app = express();
-const PORT = 3001;
-const SECRET_KEY = 'your_secret_key';
-
 app.use(bodyParser.json());
-app.use(cors()); // Add this line to enable CORS
-const sequelize = new Sequelize(config.database, config.username, config.password, {
-  host: config.host,
-  dialect: config.dialect
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Initialize Sequelize
+const sequelize = new Sequelize('my_database', 'please2', 'Jaxon4266$', {
+  host: 'ec2-3-215-102-128.compute-1.amazonaws.com',
+  dialect: 'mysql'
 });
+// Define User model
+const User = require('./models/User.js')(sequelize, DataTypes);
 
-const User = require('./User.js')(sequelize, DataTypes);
-
-sequelize.sync();
-
-module.exports = {
-  sequelize,
-  User
-};
+app.use(
+  session({
+    secret: 'your_secret_key',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false },
+  })
+);
 
 // Login endpoint
 app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
   try {
-    const { username, password } = req.body;
     const user = await User.findOne({ where: { username } });
-    
+
     if (!user) {
-      return res.status(400).json({ error: 'User not found' });
+      return res.status(404).json({ message: 'User not found' });
     }
-    
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid password' });
     }
-    
-    const token = jwt.sign({ id: user.id }, 'your_jwt_secret', { expiresIn: '1h' });
-    res.json({ token, profileCreated: user.profileCreated });
+
+    const token = jwt.sign({ id: user.id }, 'your_secret_key', {
+      expiresIn: '1h',
+    });
+
+    const profileCreated = user.profileCreated; // Assuming profileCreated is a field in the User model
+
+    res.json({ token, profileCreated });
   } catch (error) {
-    res.status(500).json({ error: 'Error logging in' });
+    console.error('Error logging in:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-
-// Sign-up endpoint
-app.post('/signup', async (req, res) => {
-  try {
-    const { email, username, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ email, username, password: hashedPassword });
-
-    res.status(201).json({ message: 'Sign-up successful', user: newUser });
-  } catch (error) {
-    res.status(500).json({ error: 'An error occurred while signing up' });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Sync database and start server
+sequelize.sync().then(() => {
+  app.listen(3001, () => {
+    console.log('Server is running on port 3001');
+  });
 });
